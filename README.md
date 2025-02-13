@@ -61,9 +61,27 @@ This tool is based on [PyResParser](https://github.com/OmkarPathak/pyresparser) 
        # Parse a resume
        resume = "/path/to/resume.docx"
        result = praser.parse(resume)```
+## API
+
+    Parses the given resume and returns the parsed result.
+     
+    Args:
+      resume (str): The resume content to be parsed, provided in the request body.
+     
+    Returns:
+      dict: A dictionary containing the parsed result of the resume.
+     
+    Example:
+      Request:
+      {
+          "resume": "Your resume content here"
+      }
+     
+      Response:
+      {
+          "result": "Parsed result here"
+      }
 
 # License
 
 This tool is based on [PyResParser](https://github.com/OmkarPathak/pyresparser) by [OmkarPathak](https://github.com/OmkarPathak) and is licensed under the [GNU GPLv3](LICENSE).
-
-*- Avaliable on PyPI Soon -*
