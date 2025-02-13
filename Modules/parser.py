@@ -22,6 +22,12 @@ class ResumeParser(object):
         # Define basic attributes
         self.__custom_mobile_regex = custom_mobile_regex
         self.__skill_set = set(pd.read_csv(skills_file)['Skill'])
+        self.reset()
+    
+    def get_extracted_data(self):
+        return self.__details
+    
+    def reset(self):
         self.__details = {
             'name': None,
             'email': None,
@@ -34,21 +40,37 @@ class ResumeParser(object):
             'companies_worked_at': None,
             'total_experience': None,
         }
-        
-
     
-    def get_extracted_data(self):
-        return self.__details
-
     def parse(self, resume):
+        """
+        Parses the given resume to extract various details such as name, email, mobile number, skills, academic degree, 
+        designation, companies worked at, and total experience.
+        Args:
+            resume (str or io.BytesIO): The resume file path or file-like object containing the resume data.
+        Returns:
+            dict: A dictionary containing the extracted resume details.
+                - name (str): The name of the candidate.
+                - email (str): The email address of the candidate.
+                - mobile_numbers (list): A list of extracted mobile numbers.
+                - skills (list): A list of extracted skills.
+                - degree (str): The academic degree of the candidate.
+                - designation (list): A list of designations held by the candidate.
+                - companies_worked_at (list): A list of companies the candidate has worked at.
+                - experience (str): The experience details extracted from the resume.
+                - total_experience (float): The total experience in years.
+        """
+        self.reset()
+        
         # Define the type of resume data
         if isinstance(resume, io.BytesIO):
             ext = resume.name.split('.')[1]
-        else:
+        elif '.' in resume[-6:]:
             ext = os.path.splitext(resume)[1].split('.')[1]
-
+        else:
+            ext = None
+        
         # Extract text from resume
-        self.__text_raw = extractors.extract_text(resume, '.' + ext)
+        self.__text_raw = extractors.extract_text(resume, ext).strip()
         
         #----------------------------------#
         # Extract resume details (Parsing) #
@@ -59,17 +81,15 @@ class ResumeParser(object):
         
         # Extract entities
         cust_ent = extractors.extract_entities_wih_custom_model(pretrained_output)
-        email = extractors.extract_email(self.__text_raw).strip()
+        email = extractors.extract_email(self.__text_raw)
         mobile = extractors.extract_mobile_numbers(self.__text_raw, self.__custom_mobile_regex)
         entities = extractors.extract_entity_sections(self.__text_raw)
         
         if 'Name' in cust_ent:
-            self.__details['name'] = cust_ent['Name'][0]
+            self.__details['name'] = cust_ent['Name'][0].strip()
         else:
-            name = self.__text_raw.split('\n')[0]
+            name = self.__text_raw.split('\n')[0].strip()
             self.__details['name'] = name
-        
-        self.__details['name'] = self.__details['name'].strip()
 
         # Extract Email
         self.__details['email'] = email
@@ -83,9 +103,8 @@ class ResumeParser(object):
         
         if valid_skills:
             self.__details['skills'] = list(set(valid_skills))
-        else:
+        elif 'skills' in entities:
             self.__details['skills'] = extractors.extract_skills('\n'.join(entities['skills']), self.__skill_set)
-            
         
         # Extract Academic Degree
         if 'Degree' in cust_ent:
@@ -112,8 +131,3 @@ class ResumeParser(object):
             self.__details['total_experience'] = 0
         
         return self.get_extracted_data()
-
-
-def resume_result_wrapper(resume):
-    parser = ResumeParser(resume)
-    return parser.get_extracted_data()

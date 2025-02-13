@@ -100,7 +100,7 @@ def extract_text_from_pdf(pdf_path):
                 "Error Occurred while reading the PDF file, The file may be encrypted")
 
 
-def extract_text(resume: str, extension: str):
+def extract_text(resume: str, extension: str = None):
     '''
     Wrapper function to detect the file extension and call text
     extraction function accordingly
@@ -109,10 +109,10 @@ def extract_text(resume: str, extension: str):
     :param extension: extension of file `file_name`
     '''
     text = ''
-    if extension == '.pdf':
+    if extension == 'pdf':
         for page in extract_text_from_pdf(resume):
             text += ' ' + page
-    elif extension == '.docx':
+    elif extension == 'docx':
         text = extract_text_from_docx(resume)
     else:
         text = resume

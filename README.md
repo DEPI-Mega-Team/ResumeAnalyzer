@@ -42,9 +42,9 @@ This tool is based on [PyResParser](https://github.com/OmkarPathak/pyresparser) 
     ```
 
 # Usage
-1. Import the main functions from `resume_analyzer.py`:
+1. Import the needed function from `resume_analyzer.py`:
     ```python
-    from ResumeAnalyzer.resume_analyzer import init_parser, parse_resume
+    from ResumeAnalyzer.resume_analyzer import init_parser
     ```
 2. Begin Parsing:
     1. Initialize the parser object to load the necessary models and modules (e.g., loading the NLP model).
@@ -56,7 +56,7 @@ This tool is based on [PyResParser](https://github.com/OmkarPathak/pyresparser) 
 
        # Parse a resume
        resume = "/path/to/resume.docx or resume_text"
-       result = parse_resume(parser, resume)```
+       result = praser.parse(resume)```
 
 # License
 
