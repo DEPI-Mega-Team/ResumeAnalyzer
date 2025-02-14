@@ -1,5 +1,6 @@
 import os
 import io
+import gc
 import spacy
 from spacy.matcher import Matcher
 import pandas as pd
@@ -39,7 +40,9 @@ class ResumeParser(object):
             'experience': None,
             'companies_worked_at': None,
             'total_experience': None,
+            'no_of_pages': None
         }
+    
     
     def parse(self, resume):
         """
@@ -64,7 +67,7 @@ class ResumeParser(object):
         # Define the type of resume data
         if isinstance(resume, io.BytesIO):
             ext = resume.name.split('.')[1]
-        elif '.' in resume[-6:]:
+        elif '.docx' == resume[-5:] or '.pdf' == resume[-4:]:
             ext = os.path.splitext(resume)[1].split('.')[1]
         else:
             ext = None
@@ -129,5 +132,12 @@ class ResumeParser(object):
             self.__details['total_experience'] = round(total_exp / 12, 2) if total_exp else 0
         else:
             self.__details['total_experience'] = 0
+        
+        if ext:
+            self.__details['no_of_pages'] = extractors.extract_number_of_pages(resume, ext)
+        
+        # To prevent memory leaks
+        del resume
+        gc.collect()
         
         return self.get_extracted_data()

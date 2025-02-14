@@ -2,6 +2,7 @@ import io
 import re
 import os
 import nltk
+import zipfile
 import docx2txt
 from pdfminer.converter import TextConverter
 from pdfminer.pdfinterp import PDFPageInterpreter
@@ -28,7 +29,7 @@ def extract_text_from_docx(doc_path: str):
     return text
 
 
-def extract_text_from_pdf(pdf_path):
+def extract_text_from_pdf(pdf_file):
     '''
     Helper function to extract the plain text from .pdf files
 
@@ -36,68 +37,47 @@ def extract_text_from_pdf(pdf_path):
     :return: iterator of string of extracted text
     '''
     # https://www.blog.pythonlibrary.org/2018/05/03/exporting-data-from-pdfs-with-python/
-    if not isinstance(pdf_path, io.BytesIO):
+    is_byte = True
+    if not isinstance(pdf_file, io.BytesIO):
         # extract text from local pdf file
-        with open(pdf_path, 'rb') as fh:
-            try:
-                for page in PDFPage.get_pages(
-                        fh,
-                        caching=True,
-                        check_extractable=True
-                ):
-                    resource_manager = PDFResourceManager()
-                    fake_file_handle = io.StringIO()
-                    converter = TextConverter(
-                        resource_manager,
-                        fake_file_handle,
-                        laparams=LAParams()
-                    )
-                    page_interpreter = PDFPageInterpreter(
-                        resource_manager,
-                        converter
-                    )
-                    page_interpreter.process_page(page)
+        pdf_file = open(pdf_file, 'rb')
+        is_byte = False
+    
+    # extract text from remote pdf file
+    try:
+        for page in PDFPage.get_pages(
+                pdf_file,
+                caching=True,
+                check_extractable=True
+        ):
+            resource_manager = PDFResourceManager()
+            fake_file_handle = io.StringIO()
+            converter = TextConverter(
+                resource_manager,
+                fake_file_handle,
+                codec='utf-8',
+                laparams=LAParams()
+            )
+            page_interpreter = PDFPageInterpreter(
+                resource_manager,
+                converter
+            )
+            page_interpreter.process_page(page)
 
-                    text = fake_file_handle.getvalue()
-                    yield text
+            text = fake_file_handle.getvalue()
+            yield text
 
-                    # close open handles
-                    converter.close()
-                    fake_file_handle.close()
-            except PDFSyntaxError:
-                raise PDFSyntaxError(
-                    "Error Occurred while reading the PDF file, The file may be encrypted")
-    else:
-        # extract text from remote pdf file
-        try:
-            for page in PDFPage.get_pages(
-                    pdf_path,
-                    caching=True,
-                    check_extractable=True
-            ):
-                resource_manager = PDFResourceManager()
-                fake_file_handle = io.StringIO()
-                converter = TextConverter(
-                    resource_manager,
-                    fake_file_handle,
-                    codec='utf-8',
-                    laparams=LAParams()
-                )
-                page_interpreter = PDFPageInterpreter(
-                    resource_manager,
-                    converter
-                )
-                page_interpreter.process_page(page)
-
-                text = fake_file_handle.getvalue()
-                yield text
-
-                # close open handles
-                converter.close()
-                fake_file_handle.close()
-        except PDFSyntaxError:
-            raise PDFSyntaxError(
-                "Error Occurred while reading the PDF file, The file may be encrypted")
+            # Close open handles
+            converter.close()
+            fake_file_handle.close()
+            
+        # Close the open file if exists
+        if not is_byte:
+            pdf_file.close()
+        
+    except PDFSyntaxError:
+        raise PDFSyntaxError(
+            "Error Occurred while reading the PDF file, The file may be encrypted")
 
 
 def extract_text(resume: str, extension: str = None):
@@ -235,3 +215,41 @@ def extract_skills(skills_section, skill_set):
     skills = [skill.capitalize() for skill in skills if skill in skill_set]
     
     return skills
+
+def extract_number_of_pages(resume, ext):
+    if ext == 'pdf':
+        return extract_number_of_pages_pdf(resume)
+
+    elif ext == 'docx':
+        return extract_number_of_pages_docx(resume)
+
+def extract_number_of_pages_pdf(pdf_file):
+    is_byte = True
+    if not isinstance(pdf_file, io.BytesIO):
+        pdf_file = open(pdf_file, 'rb')
+        is_byte = False
+    
+    pages = PDFPage.get_pages(pdf_file)
+    page_count = len(list(pages))
+    
+    if not is_byte:
+        pdf_file.close()
+    
+    
+    return page_count
+
+def extract_number_of_pages_docx(docx_file: str | io.BytesIO) -> int:
+    
+    archive = zipfile.ZipFile(docx_file, "r")
+    ms_data = archive.read("docProps/app.xml")
+    archive.close()
+    
+    app_xml = ms_data.decode("utf-8")
+
+    regex = r"<(Pages)>(\d+)</(Pages)>"
+
+    matches = re.findall(regex, app_xml, re.MULTILINE)
+    match = matches[0] if matches[0:] else [0, 0]
+    page_count = match[1]
+
+    return page_count
