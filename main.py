@@ -1,5 +1,7 @@
 from fastapi import FastAPI
-from fastapi.params import Body
+from fastapi.params import Body, File
+
+import io
 import uvicorn
 from resume_analyzer import init_parser
 
@@ -9,8 +11,12 @@ parser = init_parser()
 
 
 @app.post("/parse")
-async def parse(resume: str = Body(..., embed= True)):
-    result = parser.parse(resume)
+async def parse(resume = File(...)):
+    resume_content = await resume.read()
+    resume_io = io.BytesIO(resume_content)
+    resume_io.name = resume.filename
+    
+    result = parser.parse(resume_io)
     return {'result': result}
 
 
