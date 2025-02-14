@@ -66,7 +66,7 @@ This tool is based on [PyResParser](https://github.com/OmkarPathak/pyresparser) 
     Parses the given resume and returns the parsed result.
      
     Args:
-      resume (str): The resume content to be parsed, provided in the request body.
+      resume (File): The resume file to be parsed.
      
     Returns:
       dict: A dictionary containing the parsed result of the resume.
