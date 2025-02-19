@@ -1,7 +1,6 @@
 import io
 import re
 import os
-import nltk
 import zipfile
 import docx2txt
 from pdfminer.converter import TextConverter
@@ -12,10 +11,6 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFSyntaxError
 
 from . import constants as cs
-
-# Add the local data path
-nltk.data.path.append(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__))) + '/Data/nltk_data')
 
 
 def extract_text_from_docx(doc_path: str):

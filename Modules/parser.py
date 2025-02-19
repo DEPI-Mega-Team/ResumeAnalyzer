@@ -40,7 +40,8 @@ class ResumeParser(object):
             'experience': None,
             'companies_worked_at': None,
             'total_experience': None,
-            'no_of_pages': None
+            'no_of_pages': None,
+            'format': None
         }
     
     
@@ -134,6 +135,7 @@ class ResumeParser(object):
             self.__details['total_experience'] = 0
         
         if ext:
+            self.__details['format'] = ext
             self.__details['no_of_pages'] = extractors.extract_number_of_pages(resume, ext)
         
         # To prevent memory leaks
