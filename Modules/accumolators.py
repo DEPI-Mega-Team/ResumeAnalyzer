@@ -3,37 +3,47 @@ import re
 
 from datetime import datetime
 from dateutil import relativedelta
+import zipfile
 from pdfminer.pdfpage import PDFPage
-from pdfminer.pdfparser import PDFSyntaxError
 
-def get_number_of_pages(file_name):
-    try:
-        if isinstance(file_name, io.BytesIO):
-            # for remote pdf file
-            count = 0
-            for page in PDFPage.get_pages(
-                file_name,
-                caching=True,
-                check_extractable=True
-            ):
-                count += 1
-            return count
-        else:
-            # for local files
-            if file_name.endswith('.pdf'):
-                count = 0
-                with open(file_name, 'rb') as fh:
-                    for page in PDFPage.get_pages(
-                            fh,
-                            caching=True,
-                            check_extractable=True
-                    ):
-                        count += 1
-                return count
-            else:
-                return None
-    except (PDFSyntaxError, Exception):
-        return None
+def get_number_of_pages(resume, ext):
+    if ext == 'pdf':
+        return get_number_of_pages_pdf(resume)
+
+    elif ext == 'docx':
+        return get_number_of_pages_docx(resume)
+
+def get_number_of_pages_pdf(pdf_file):
+    is_byte = True
+    if not isinstance(pdf_file, io.BytesIO):
+        pdf_file = open(pdf_file, 'rb')
+        is_byte = False
+    
+    pages = PDFPage.get_pages(pdf_file)
+    page_count = len(list(pages))
+    
+    if not is_byte:
+        pdf_file.close()
+    
+    
+    return page_count
+
+def get_number_of_pages_docx(docx_file: str | io.BytesIO) -> int:
+    
+    archive = zipfile.ZipFile(docx_file, "r")
+    ms_data = archive.read("docProps/app.xml")
+    archive.close()
+    
+    app_xml = ms_data.decode("utf-8")
+
+    regex = r"<(Pages)>(\d+)</(Pages)>"
+
+    matches = re.findall(regex, app_xml, re.MULTILINE)
+    match = matches[0] if matches[0:] else [0, 0]
+    page_count = match[1]
+
+    return page_count
+
 
 def get_total_experience(experience_list):
     '''

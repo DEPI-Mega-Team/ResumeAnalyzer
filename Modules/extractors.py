@@ -1,7 +1,6 @@
 import io
 import re
 import os
-import zipfile
 import docx2txt
 from pdfminer.converter import TextConverter
 from pdfminer.pdfinterp import PDFPageInterpreter
@@ -210,41 +209,3 @@ def extract_skills(skills_section, skill_set):
     skills = [skill.capitalize() for skill in skills if skill in skill_set]
     
     return skills
-
-def extract_number_of_pages(resume, ext):
-    if ext == 'pdf':
-        return extract_number_of_pages_pdf(resume)
-
-    elif ext == 'docx':
-        return extract_number_of_pages_docx(resume)
-
-def extract_number_of_pages_pdf(pdf_file):
-    is_byte = True
-    if not isinstance(pdf_file, io.BytesIO):
-        pdf_file = open(pdf_file, 'rb')
-        is_byte = False
-    
-    pages = PDFPage.get_pages(pdf_file)
-    page_count = len(list(pages))
-    
-    if not is_byte:
-        pdf_file.close()
-    
-    
-    return page_count
-
-def extract_number_of_pages_docx(docx_file: str | io.BytesIO) -> int:
-    
-    archive = zipfile.ZipFile(docx_file, "r")
-    ms_data = archive.read("docProps/app.xml")
-    archive.close()
-    
-    app_xml = ms_data.decode("utf-8")
-
-    regex = r"<(Pages)>(\d+)</(Pages)>"
-
-    matches = re.findall(regex, app_xml, re.MULTILINE)
-    match = matches[0] if matches[0:] else [0, 0]
-    page_count = match[1]
-
-    return page_count

@@ -136,7 +136,7 @@ class ResumeParser(object):
         
         if ext:
             self.__details['format'] = ext
-            self.__details['no_of_pages'] = extractors.extract_number_of_pages(resume, ext)
+            self.__details['no_of_pages'] = accumolators.get_number_of_pages(resume, ext)
         
         # To prevent memory leaks
         del resume
