@@ -1,8 +1,4 @@
-import nltk
 import os
-
-# Add the local data path
-nltk.data.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Data/nltk_data')
 
 # Name Entity Recognition Pattern #Todo: Add more patterns
 NAME_PATTERN = [{'POS': 'PROPN'}, {'POS': 'PROPN'}]
@@ -28,7 +24,7 @@ DEGREE = {'bachelor', 'master', 'phd', 'doctorate', 'associate',
          }
 
 NOT_ALPHA_NUMERIC = r'[^a-zA-Z\d]'
-
+OBJECT_PATTERN = r"\b\w+(?:[- ]\w+)*\b"
 NUMBER = r'\d+'
 
 # For finding date ranges
@@ -42,6 +38,8 @@ YEAR = r'(((20|19)(\d{2})))'
 RESUME_SECTIONS = [
                     'accomplishments',
                     'experience',
+                    'volunteering',
+                    'activities',
                     'education',
                     'interests',
                     'projects',

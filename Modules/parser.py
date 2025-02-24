@@ -122,9 +122,20 @@ class ResumeParser(object):
         if 'Companies worked at' in cust_ent:
             self.__details['companies_worked_at'] = cust_ent['Companies worked at']
 
-        # Exract and Calculate Experience
+        # Exract Experience
+        experience = []
+        if 'activities' in entities:
+            experience += entities['activities']
+        
         if 'experience' in entities:
-            self.__details['experience'] = entities['experience']
+            experience += entities['experience']
+        
+        if 'volunteering' in entities:
+            experience += entities['volunteering']
+        
+        # Calculate Total Experience
+        if experience:
+            self.__details['experience'] = experience
             
             # Get Experience in Months
             total_exp = accumolators.get_total_experience(entities['experience'])
@@ -136,7 +147,10 @@ class ResumeParser(object):
         
         if ext:
             self.__details['format'] = ext
-            self.__details['no_of_pages'] = accumolators.get_number_of_pages(resume, ext)
+            number_of_pages = accumolators.get_number_of_pages(resume, ext)
+            if number_of_pages:
+                self.__details['no_of_pages'] = number_of_pages
+        
         
         # To prevent memory leaks
         del resume

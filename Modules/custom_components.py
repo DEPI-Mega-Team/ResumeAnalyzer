@@ -3,7 +3,7 @@ from spacy.language import Language
 from spacy.tokens import Span
 from . import constants as cs
 
-object_pattern = r"\b\w+(?:[^\w\n]\w+)*\b"
+object_pattern = cs.OBJECT_PATTERN
 
 @Language.component("skill_ner")
 def skill_ner(doc):

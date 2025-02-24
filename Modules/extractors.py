@@ -203,8 +203,7 @@ def extract_skills(skills_section, skill_set):
     '''
     
     # Object REGEX
-    object_pattern = r"\b\w+(?:[^\w\n]\w+)*\b"
-    
+    object_pattern = cs.OBJECT_PATTERN
     skills = re.findall(object_pattern, skills_section)
     skills = [skill.capitalize() for skill in skills if skill in skill_set]
     
