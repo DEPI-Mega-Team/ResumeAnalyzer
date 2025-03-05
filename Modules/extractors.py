@@ -1,6 +1,7 @@
 import io
 import re
 import pymupdf
+import pymupdf
 import docx2txt
 from docx import Document
 
