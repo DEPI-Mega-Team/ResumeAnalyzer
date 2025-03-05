@@ -6,6 +6,7 @@ import docx2txt
 from docx import Document
 
 from . import constants as cs
+from . import utils
 
 
 def handle_io_bytes(func):
@@ -197,7 +198,7 @@ def extract_links_from_text(text: str):
     :return: string of extracted links
     '''
     links = re.findall(cs.URL_PATTERN, text)
-    links = {link for link in links if not link.startswith("mailto:")}
+    links = {link for link in list(links) if utils.validate_link(link)}
     return links
 
 @handle_io_bytes
@@ -238,6 +239,6 @@ def extract_hyperlinks(resume_file: str, extension: str = None):
         raise ValueError("Unsupported file extension")
     
     # Preprocessing
-    links = {link for link in list(links) if not link.startswith("mailto:")}
+    links = {link for link in list(links) if utils.validate_link(link)}
     
     return links
