@@ -3,6 +3,8 @@ import re
 
 import zipfile
 import pymupdf
+import zipfile
+import pymupdf
 from datetime import datetime
 from dateutil import relativedelta
 from.extractors import handle_io_bytes
@@ -18,7 +20,7 @@ def get_number_of_pages(resume, ext):
 def get_number_of_pages_pdf(pdf_file):
     with pymupdf.open(stream= pdf_file, filetype="pdf") as doc:
         page_count = len(doc)
-    
+        
     return page_count
 
 def get_number_of_pages_docx(docx_file: str | io.BytesIO) -> int:
