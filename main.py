@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi.params import Body, File
+from fastapi.params import File
 from fastapi import UploadFile  
 import io
 import uvicorn
