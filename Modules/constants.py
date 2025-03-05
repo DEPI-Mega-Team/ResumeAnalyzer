@@ -2,6 +2,7 @@ import os
 
 # Name Entity Recognition Pattern #Todo: Add more patterns
 NAME_PATTERN = [{'POS': 'PROPN'}, {'POS': 'PROPN'}]
+URL_PATTERN = r'(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)'
 
 # Education (Upper Case Mandatory)
 EDUCATION = {

@@ -2,11 +2,11 @@ import os
 import io
 import gc
 import spacy
-from spacy.matcher import Matcher
 import pandas as pd
 
 from . import extractors
 from . import accumolators
+from . import utils
 from .custom_components import skill_ner, degree_ner
 
 workspace_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -40,6 +40,7 @@ class ResumeParser(object):
             'experience': None,
             'companies_worked_at': None,
             'total_experience': None,
+            'links': None,
             'no_of_pages': None,
             'format': None
         }
@@ -70,6 +71,9 @@ class ResumeParser(object):
             ext = resume.name.split('.')[1]
         elif '.docx' == resume[-5:] or '.pdf' == resume[-4:]:
             ext = os.path.splitext(resume)[1].split('.')[1]
+            
+            # Load the file to the memory
+            resume = utils.load_to_memory(resume)
         else:
             ext = None
         
@@ -80,35 +84,44 @@ class ResumeParser(object):
         # Extract resume details (Parsing) #
         #----------------------------------#
         
+        # Extract Email
+        email = extractors.extract_email(self.__text_raw)
+        self.__details['email'] = email
+
+        # Extract Mobile Number
+        mobile = extractors.extract_mobile_numbers(self.__text_raw, self.__custom_mobile_regex)
+        self.__details['mobile_numbers'] = mobile
+
+        
+        # Extract Links
+        links = list(extractors.extract_links_from_text(self.__text_raw) | extractors.extract_hyperlinks(resume, ext))
+        if links:
+            self.__details['links'] = links
+        
         # Model Outputs
         pretrained_output = self.__pretrained_nlp(self.__text_raw)
         
+        # Extract Skills
+        skills = [ent.text for ent in pretrained_output.ents if ent.label_ == 'Skill']
+        valid_skills = {skill for skill in skills if skill.lower() in self.__skill_set}
+        
+        if valid_skills:
+            self.__details['skills'] = list(valid_skills)
+            
+        elif 'skills' in entities:
+            self.__details['skills'] = extractors.extract_skills('\n'.join(entities['skills']), self.__skill_set)
+        
+        
         # Extract entities
         cust_ent = extractors.extract_entities_wih_custom_model(pretrained_output)
-        email = extractors.extract_email(self.__text_raw)
-        mobile = extractors.extract_mobile_numbers(self.__text_raw, self.__custom_mobile_regex)
         entities = extractors.extract_entity_sections(self.__text_raw)
         
+        # Extract Name
         if 'Name' in cust_ent:
             self.__details['name'] = cust_ent['Name'][0].strip()
         else:
             name = self.__text_raw.split('\n')[0].strip()
             self.__details['name'] = name
-
-        # Extract Email
-        self.__details['email'] = email
-
-        # Extract Mobile Number
-        self.__details['mobile_numbers'] = mobile
-
-        # Extract Skills
-        skills = [ent.text for ent in pretrained_output.ents if ent.label_ == 'Skill']
-        valid_skills = [skill for skill in skills if skill.lower() in self.__skill_set]
-        
-        if valid_skills:
-            self.__details['skills'] = list(set(valid_skills))
-        elif 'skills' in entities:
-            self.__details['skills'] = extractors.extract_skills('\n'.join(entities['skills']), self.__skill_set)
         
         # Extract Academic Degree
         if 'Degree' in cust_ent:
@@ -150,7 +163,6 @@ class ResumeParser(object):
             number_of_pages = accumolators.get_number_of_pages(resume, ext)
             if number_of_pages:
                 self.__details['no_of_pages'] = number_of_pages
-        
         
         # To prevent memory leaks
         del resume

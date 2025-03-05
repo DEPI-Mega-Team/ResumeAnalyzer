@@ -1,10 +1,11 @@
 import io
 import re
 
+import zipfile
+import pymupdf
 from datetime import datetime
 from dateutil import relativedelta
-import zipfile
-from pdfminer.pdfpage import PDFPage
+from.extractors import handle_io_bytes
 
 def get_number_of_pages(resume, ext):
     if ext == 'pdf':
@@ -13,18 +14,10 @@ def get_number_of_pages(resume, ext):
     elif ext == 'docx':
         return get_number_of_pages_docx(resume)
 
+@handle_io_bytes
 def get_number_of_pages_pdf(pdf_file):
-    is_byte = True
-    if not isinstance(pdf_file, io.BytesIO):
-        pdf_file = open(pdf_file, 'rb')
-        is_byte = False
-    
-    pages = PDFPage.get_pages(pdf_file)
-    page_count = len(list(pages))
-    
-    if not is_byte:
-        pdf_file.close()
-    
+    with pymupdf.open(stream= pdf_file, filetype="pdf") as doc:
+        page_count = len(doc)
     
     return page_count
 

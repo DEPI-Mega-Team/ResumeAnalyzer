@@ -1,28 +1,42 @@
 import io
 import re
 import os
+import pymupdf
 import docx2txt
-from pdfminer.converter import TextConverter
-from pdfminer.pdfinterp import PDFPageInterpreter
-from pdfminer.pdfinterp import PDFResourceManager
-from pdfminer.layout import LAParams
-from pdfminer.pdfpage import PDFPage
-from pdfminer.pdfparser import PDFSyntaxError
+from docx import Document
 
 from . import constants as cs
 
 
-def extract_text_from_docx(doc_path: str):
+def handle_io_bytes(func):
+    def checker(input_file):
+        is_byte = True
+        if not isinstance(input_file, io.BytesIO):
+            # extract text from local pdf file
+            input_file = open(input_file, 'rb')
+            is_byte = False
+        
+        result = func(input_file)
+        
+        if not is_byte:
+            input_file.close()
+        
+        return result
+    
+    return checker
+
+@handle_io_bytes
+def extract_text_from_docx(doc_file: str):
     '''
     Helper function to extract plain text from .docx files
 
-    :param doc_path: path to .docx file to be extracted
+    :param doc_file: path to .docx file to be extracted
     :return: string of extracted text
     '''
-    text = docx2txt.process(doc_path)
+    text = docx2txt.process(doc_file)
     return text
 
-
+@handle_io_bytes
 def extract_text_from_pdf(pdf_file):
     '''
     Helper function to extract the plain text from .pdf files
@@ -30,49 +44,17 @@ def extract_text_from_pdf(pdf_file):
     :param pdf_path: path to PDF file to be extracted (remote or local)
     :return: iterator of string of extracted text
     '''
-    # https://www.blog.pythonlibrary.org/2018/05/03/exporting-data-from-pdfs-with-python/
-    is_byte = True
-    if not isinstance(pdf_file, io.BytesIO):
-        # extract text from local pdf file
-        pdf_file = open(pdf_file, 'rb')
-        is_byte = False
+    # Open PDF file
+    with pymupdf.open(stream=pdf_file, filetype="pdf") as pdf_document:
+        # Initialize text variable
+        text = ""
+        # Iterate through pages
+        for page_num in range(len(pdf_document)):
+            page = pdf_document.load_page(page_num)
+            text += page.get_text()
     
-    # extract text from remote pdf file
-    try:
-        for page in PDFPage.get_pages(
-                pdf_file,
-                caching=True,
-                check_extractable=True
-        ):
-            resource_manager = PDFResourceManager()
-            fake_file_handle = io.StringIO()
-            converter = TextConverter(
-                resource_manager,
-                fake_file_handle,
-                codec='utf-8',
-                laparams=LAParams()
-            )
-            page_interpreter = PDFPageInterpreter(
-                resource_manager,
-                converter
-            )
-            page_interpreter.process_page(page)
-
-            text = fake_file_handle.getvalue()
-            yield text
-
-            # Close open handles
-            converter.close()
-            fake_file_handle.close()
-            
-        # Close the open file if exists
-        if not is_byte:
-            pdf_file.close()
-        
-    except PDFSyntaxError:
-        raise PDFSyntaxError(
-            "Error Occurred while reading the PDF file, The file may be encrypted")
-
+    return text
+    
 
 def extract_text(resume: str, extension: str = None):
     '''
@@ -84,8 +66,7 @@ def extract_text(resume: str, extension: str = None):
     '''
     text = ''
     if extension == 'pdf':
-        for page in extract_text_from_pdf(resume):
-            text += ' ' + page
+        text = extract_text_from_pdf(resume)
     elif extension == 'docx':
         text = extract_text_from_docx(resume)
     else:
@@ -194,8 +175,6 @@ def extract_mobile_numbers(text: str, custom_regex: str = None):
 
 def extract_skills(skills_section, skill_set):
     '''
-    #--- DEPRECATED ---#
-    
     Helper function to extract skills from spacy nlp text
 
     :param skills_section: string of skills section extracted from resume
@@ -208,3 +187,57 @@ def extract_skills(skills_section, skill_set):
     skills = [skill.capitalize() for skill in skills if skill in skill_set]
     
     return skills
+
+
+def extract_links_from_text(text: str):
+    '''
+    Helper function to extract links from text
+
+    :param text: plain text extracted from resume file
+    :return: string of extracted links
+    '''
+    links = re.findall(cs.URL_PATTERN, text)
+    links = {link for link in links if not link.startswith("mailto:")}
+    return links
+
+@handle_io_bytes
+def extract_hyperlinks_from_pdf(pdf_file):
+    links = set()
+    
+    with pymupdf.open(stream= pdf_file, filetype="pdf") as pdf_document:
+        for page_num in range(len(pdf_document)):
+            page = pdf_document.load_page(page_num)
+            links_in_page = page.get_links()
+            
+            for link in links_in_page:
+                if link["kind"] == 2 and link["uri"]:
+                    links.add(link["uri"])
+    
+    return links
+
+@handle_io_bytes
+def extract_hyperlinks_from_docx(docx_file):
+    links = set()
+    
+    doc = Document(docx_file)
+    for rel in doc.part.rels.values():
+        if "hyperlink" in rel.reltype:
+            links.add(rel.target_ref)
+    
+    return links
+
+def extract_hyperlinks(resume_file: str, extension: str = None):
+    links = set()
+    
+    if extension == 'pdf':
+        links.update(extract_hyperlinks_from_pdf(resume_file))
+    
+    elif extension == 'docx':
+        links.update(extract_hyperlinks_from_docx(resume_file))
+    else:
+        raise ValueError("Unsupported file extension")
+    
+    # Preprocessing
+    links = {link for link in list(links) if not link.startswith("mailto:")}
+    
+    return links
