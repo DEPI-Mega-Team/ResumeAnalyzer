@@ -30,15 +30,15 @@ numpy==2.2.2
 olefile==0.46
 packaging==24.2
 pandas==2.2.3
-pdfminer==20191125
-pdfminer.six==20181108
 pillow==11.1.0
 preshed==3.0.9
 pycryptodome==3.21.0
 pydantic==2.10.6
 pydantic_core==2.27.2
 Pygments==2.19.1
+PyMuPDF==1.25.3
 python-dateutil==2.9.0.post0
+python-docx==1.1.2
 python-pptx==0.6.18
 pytz==2025.1
 regex==2024.11.6
