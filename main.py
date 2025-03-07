@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.params import File
 from fastapi import UploadFile  
 import io
-import uvicorn
 from resume_analyzer import init_parser
 
 app = FastAPI()
@@ -22,4 +21,5 @@ async def parse(resume: UploadFile = File(...)):
 
 
 if __name__ == "__main__":
+    import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000)
