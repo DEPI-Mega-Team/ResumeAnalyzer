@@ -75,10 +75,14 @@ class ResumeParser(object):
             # Load the file to the memory
             resume = utils.load_to_memory(resume)
         else:
-            ext = None
+            if isinstance(resume, str):
+                ext = None
+            else:
+                raise ValueError("Invalid resume data")
         
         # Extract text from resume
         self.__text_raw = extractors.extract_text(resume, ext).strip()
+        self.__text_raw = utils.preprocess_text(self.__text_raw)
         
         #----------------------------------#
         # Extract resume details (Parsing) #
@@ -101,9 +105,13 @@ class ResumeParser(object):
         # Model Outputs
         pretrained_output = self.__pretrained_nlp(self.__text_raw)
         
+        # Extract entities
+        cust_ent = extractors.extract_entities_wih_custom_model(pretrained_output)
+        entities = extractors.extract_entity_sections(self.__text_raw)
+        
         # Extract Skills
         skills = [ent.text for ent in pretrained_output.ents if ent.label_ == 'Skill']
-        valid_skills = {skill for skill in skills if skill.lower() in self.__skill_set}
+        valid_skills = {skill for skill in skills if skill.strip().lower().replace(' ', '') in self.__skill_set}
         
         if valid_skills:
             self.__details['skills'] = list(valid_skills)
@@ -111,10 +119,6 @@ class ResumeParser(object):
         elif 'skills' in entities:
             self.__details['skills'] = extractors.extract_skills('\n'.join(entities['skills']), self.__skill_set)
         
-        
-        # Extract entities
-        cust_ent = extractors.extract_entities_wih_custom_model(pretrained_output)
-        entities = extractors.extract_entity_sections(self.__text_raw)
         
         # Extract Name
         if 'Name' in cust_ent:
@@ -134,22 +138,9 @@ class ResumeParser(object):
         # Extract Company Names
         if 'Companies worked at' in cust_ent:
             self.__details['companies_worked_at'] = cust_ent['Companies worked at']
-
-        # Exract Experience
-        experience = []
-        if 'activities' in entities:
-            experience += entities['activities']
-        
-        if 'experience' in entities:
-            experience += entities['experience']
-        
-        if 'volunteering' in entities:
-            experience += entities['volunteering']
         
         # Calculate Total Experience
-        if experience:
-            self.__details['experience'] = experience
-            
+        if 'experience' in entities:
             # Get Experience in Months
             total_exp = accumolators.get_total_experience(entities['experience'])
             

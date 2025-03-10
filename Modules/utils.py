@@ -17,3 +17,6 @@ def validate_link(link):
         return False
     
     return True
+
+def preprocess_text(doc):
+    return doc.encode('ascii', 'replace').decode('ascii').replace('?', '-')
