@@ -16,6 +16,10 @@ async def parse(resume: UploadFile = File(...)):
     resume_io = io.BytesIO(resume_content)
     resume_io.name = resume.filename
     
+    extension = resume.filename.split('.')[-1]
+    if extension not in ['pdf', 'docx']:
+        return {'error': 'Invalid file format. Only PDF and DOCX files are supported.'}
+    
     result = parser.parse(resume_io)
     return {'result': result}
 
