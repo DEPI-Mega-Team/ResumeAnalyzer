@@ -7,18 +7,18 @@ import pandas as pd
 from . import extractors
 from . import accumolators
 from . import utils
-from .custom_components import skill_ner, degree_ner
+from . import constants as cs
 
-workspace_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from .custom_components import skill_ner, degree_ner
 
 class ResumeParser(object):
 
     def __init__(self,
-                 skills_file= workspace_dir +'/Data/skills.csv',
+                 skills_file= cs.workspace_dir +'/Data/skills.csv',
                  custom_mobile_regex=None):
         
         # Load NLP Models
-        self.__pretrained_nlp = spacy.load(workspace_dir + '/Model/ResumeAnalyzerV3')
+        self.__pretrained_nlp = spacy.load(cs.workspace_dir + '/Model/ResumeAnalyzerV3')
         
         # Define basic attributes
         self.__custom_mobile_regex = custom_mobile_regex
@@ -111,7 +111,7 @@ class ResumeParser(object):
         
         # Extract Skills
         skills = [ent.text for ent in pretrained_output.ents if ent.label_ == 'Skill']
-        valid_skills = {skill for skill in skills if skill.strip().lower().replace(' ', '') in self.__skill_set}
+        valid_skills = {skill for skill in skills if utils.preprocess_skill(skill) in self.__skill_set}
         
         if valid_skills:
             self.__details['skills'] = list(valid_skills)

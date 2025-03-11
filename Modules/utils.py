@@ -20,3 +20,6 @@ def validate_link(link):
 
 def preprocess_text(doc):
     return doc.encode('ascii', 'replace').decode('ascii').replace('?', '-')
+
+def preprocess_skill(skill):
+    return skill.strip().lower().replace(' ', '')

@@ -3,14 +3,12 @@ from spacy.language import Language
 from spacy.tokens import Span
 from . import constants as cs
 
-object_pattern = cs.OBJECT_PATTERN
-
 @Language.component("skill_ner")
 def skill_ner(doc):
     original_ents = list(doc.ents)
     skill_blocks = [ent for ent in doc.ents if ent.label_ == 'Skills']
 
-    pattern = r"[Cc](?:\+\+|\#)?|" + object_pattern
+    pattern = cs.SKILL_PATTERN
 
     mwt_ents = []
     for block in skill_blocks:
@@ -35,14 +33,13 @@ def skill_ner(doc):
 
 @Language.component("degree_ner")
 def degree_ner(doc):
-    pattern = object_pattern
+    pattern = cs.OBJECT_PATTERN
     
     original_ents = list(doc.ents)
     skill_blocks = [ent for ent in doc.ents if ent.label_ == 'Degree']
 
     mwt_ents = []
     for block in skill_blocks:
-        i, j = block.start, block.end
         for match in re.finditer(pattern, block.text):
             start, end = match.span()
             start += block.start_char

@@ -1,9 +1,15 @@
 import os
 
+workspace_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 # Name Entity Recognition Pattern #Todo: Add more patterns
 NAME_PATTERN = [{'POS': 'PROPN'}, {'POS': 'PROPN'}]
+NOT_ALPHA_NUMERIC = r'[^a-zA-Z\d]'
+OBJECT_PATTERN = r"\b\w+(?:[- ]\w+)*\b"
+NUMBER = r'\d+'
 URL_PATTERN = r'(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)'
 EMAIL_PATTERN = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+SKILL_PATTERN = r"[Cc](?:\+\+|\#)?|" + OBJECT_PATTERN
 
 # Education (Upper Case Mandatory)
 EDUCATION = {
@@ -24,10 +30,6 @@ DEGREE = {'bachelor', 'master', 'phd', 'doctorate', 'associate',
             'CBSE', 'ICSE',                     # Central Board of Secondary Education, Indian Certificate of Secondary Education
             'X', 'XII'  
          }
-
-NOT_ALPHA_NUMERIC = r'[^a-zA-Z\d]'
-OBJECT_PATTERN = r"\b\w+(?:[- ]\w+)*\b"
-NUMBER = r'\d+'
 
 # For finding date ranges
 MONTHS_SHORT = r'''(jan)|(feb)|(mar)|(apr)|(may)|(jun)|(jul)
@@ -54,6 +56,4 @@ RESUME_SECTIONS = [
                     'career objective',
                     'summary',
                     'leadership',
-                    'languages',
-                    'language'
                 ]

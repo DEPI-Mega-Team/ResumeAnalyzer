@@ -183,9 +183,10 @@ def extract_skills(skills_section, skill_set):
     '''
     
     # Object REGEX
-    object_pattern = cs.OBJECT_PATTERN
-    skills = re.findall(object_pattern, skills_section)
-    skills = [skill.capitalize() for skill in skills if skill in skill_set]
+    pattern = cs.SKILL_PATTERN
+    
+    skills = re.findall(pattern, skills_section)
+    skills = [skill.capitalize() for skill in skills if utils.preprocess_skill(skill) in skill_set]
     
     return skills
 
@@ -200,6 +201,7 @@ def extract_links_from_text(text: str):
     links = re.findall(cs.URL_PATTERN, text)
     links = {link for link in list(links) if utils.validate_link(link)}
     return links
+
 
 @handle_io_bytes
 def extract_hyperlinks_from_pdf(pdf_file):
