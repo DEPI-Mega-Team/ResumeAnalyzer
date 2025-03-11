@@ -25,5 +25,9 @@ async def parse(resume: UploadFile = File(...)):
 
 
 if __name__ == "__main__":
+    import os
+    from Modules import constants as cs
     import uvicorn
+
+    os.chdir(cs.workspace_dir)
     uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000)
