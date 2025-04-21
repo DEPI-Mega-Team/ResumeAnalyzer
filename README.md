@@ -23,7 +23,6 @@ This tool is based on [PyResParser](https://github.com/OmkarPathak/pyresparser) 
   - total experience in years
   - college name
   - degree
-  - designation
   - company names
 
 - Supports resume formats PDF and DOCX.

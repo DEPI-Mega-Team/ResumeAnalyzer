@@ -15,7 +15,8 @@ class ResumeParser(object):
 
     def __init__(self,
                  skills_file= cs.workspace_dir +'/Data/skills.csv',
-                 custom_mobile_regex=None):
+                 companies_file= cs.workspace_dir +'/Data/companies.csv',
+                 custom_mobile_regex= None):
         
         # Load NLP Models
         self.__pretrained_nlp = spacy.load(cs.workspace_dir + '/Model/ResumeAnalyzerV3')
@@ -23,22 +24,28 @@ class ResumeParser(object):
         # Define basic attributes
         self.__custom_mobile_regex = custom_mobile_regex
         self.__skill_set = set(pd.read_csv(skills_file)['Skill'])
+        self.__companies_list = list(pd.read_csv(companies_file)['Company'])
         self.reset()
     
     def get_extracted_data(self):
+        """
+        Returns the extracted details from the resume
+        """
         return self.__details
     
     def reset(self):
+        """
+        Resets the __details dictionary to its initial state
+        """
         self.__details = {
             'name': None,
             'email': None,
             'mobile_numbers': None,
             'skills': None,
-            'college_name': None,
+            'college': None,
             'degree': None,
-            'designation': None,
             'experience': None,
-            'companies_worked_at': None,
+            'companies': None,
             'total_experience': None,
             'links': None,
             'no_of_pages': None,
@@ -48,8 +55,8 @@ class ResumeParser(object):
     
     def parse(self, resume):
         """
-        Parses the given resume to extract various details such as name, email, mobile number, skills, academic degree, 
-        designation, companies worked at, and total experience.
+        Parses the given resume to extract various details such as name, email, mobile number, skills, academic degree,
+        companies worked at, and total experience.
         Args:
             resume (str or io.BytesIO): The resume file path or file-like object containing the resume data.
         Returns:
@@ -58,9 +65,9 @@ class ResumeParser(object):
                 - email (str): The email address of the candidate.
                 - mobile_numbers (list): A list of extracted mobile numbers.
                 - skills (list): A list of extracted skills.
+                - colleges (str): The colleges the candidate mentioned in the resume.
                 - degree (str): The academic degree of the candidate.
-                - designation (list): A list of designations held by the candidate.
-                - companies_worked_at (list): A list of companies the candidate has worked at.
+                - companies (list): A list of companies the candidate mentioned in the resume.
                 - experience (str): The experience details extracted from the resume.
                 - total_experience (float): The total experience in years.
         """
@@ -82,7 +89,7 @@ class ResumeParser(object):
         
         # Extract text from resume
         self.__text_raw = extractors.extract_text(resume, ext).strip()
-        self.__text_raw = utils.preprocess_text(self.__text_raw)
+        self.__text_raw = utils.encode_text(self.__text_raw)
         
         #----------------------------------#
         # Extract resume details (Parsing) #
@@ -98,7 +105,10 @@ class ResumeParser(object):
 
         
         # Extract Links
-        links = list(extractors.extract_links_from_text(self.__text_raw) | extractors.extract_hyperlinks(resume, ext))
+        text_links = extractors.extract_links_from_text(self.__text_raw)
+        hyper_links = extractors.extract_hyperlinks(resume, ext)
+        links = list(text_links | hyper_links)
+        
         if links:
             self.__details['links'] = links
         
@@ -129,15 +139,21 @@ class ResumeParser(object):
         
         # Extract Academic Degree
         if 'Degree' in cust_ent:
-            self.__details['degree'] = cust_ent['Degree']
-
-        # Extract Designation
-        if 'Designation' in cust_ent:
-            self.__details['designation'] = [ent.text for ent in pretrained_output.ents if ent.label_ == 'Designation']
-
+            self.__details['degree'] = cust_ent['Degree'][0]
+        else:
+            self.__details['degree'] = extractors.extract_highest_degree(self.__text_raw)
+        
         # Extract Company Names
         if 'Companies worked at' in cust_ent:
-            self.__details['companies_worked_at'] = cust_ent['Companies worked at']
+            self.__details['companies'] = cust_ent['Companies worked at']
+        else:
+            self.__details['companies'] = extractors.extract_companies(self.__text_raw, self.__companies_list)
+        
+        # Extract College Name
+        if 'College' in cust_ent:
+            self.__details['college'] = cust_ent['College']
+        else:
+            self.__details['college'] = extractors.extract_college(self.__text_raw)
         
         # Calculate Total Experience
         if 'experience' in entities:
@@ -151,12 +167,20 @@ class ResumeParser(object):
         
         if ext:
             self.__details['format'] = ext
-            number_of_pages = accumolators.get_number_of_pages(resume, ext)
-            if number_of_pages:
-                self.__details['no_of_pages'] = number_of_pages
+            self.__details['no_of_pages'] = accumolators.get_number_of_pages(resume, ext)
+        
+        self.set_empty_attributes_to_none()
         
         # To prevent memory leaks
         del resume
         gc.collect()
         
         return self.get_extracted_data()
+
+    def set_empty_attributes_to_none(self):
+        """
+        Sets any empty attributes in __details dictionary to None
+        """
+        for key in self.__details:
+            if not self.__details[key]:
+                self.__details[key] = None

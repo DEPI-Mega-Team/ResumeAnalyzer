@@ -16,15 +16,16 @@ def handle_io_bytes(func):
             # extract text from local pdf file
             input_file = open(input_file, 'rb')
             is_byte = False
-        
+
         result = func(input_file)
-        
+
         if not is_byte:
             input_file.close()
-        
+
         return result
-    
+
     return checker
+
 
 @handle_io_bytes
 def extract_text_from_docx(doc_file: str):
@@ -36,6 +37,7 @@ def extract_text_from_docx(doc_file: str):
     '''
     text = docx2txt.process(doc_file)
     return text
+
 
 @handle_io_bytes
 def extract_text_from_pdf(pdf_file):
@@ -53,9 +55,9 @@ def extract_text_from_pdf(pdf_file):
         for page_num in range(len(pdf_document)):
             page = pdf_document.load_page(page_num)
             text += page.get_text()
-    
+
     return text
-    
+
 
 def extract_text(resume: str, extension: str = None):
     '''
@@ -72,7 +74,7 @@ def extract_text(resume: str, extension: str = None):
         text = extract_text_from_docx(resume)
     else:
         text = resume
-    
+
     text = [line.replace('\t', ' ') for line in text.split('\n') if line]
     return '\n'.join(text)
 
@@ -149,7 +151,7 @@ def extract_email(text: str):
 
     :param text: plain text extracted from resume file
     '''
-    email = re.findall(r"([^@|\s]+@[^@]+\.[^@|\s]+)", text)
+    email = re.findall(cs.EMAIL_PATTERN, text)
     if email:
         try:
             return email[0].split()[0].strip(';')
@@ -165,12 +167,13 @@ def extract_mobile_numbers(text: str, custom_regex: str = None):
     :return: string of extracted mobile numbers
     '''
     if not custom_regex:
-        mob_num_regex = r'''\(?\+?\d{1,3}\)?[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}'''
-        matches = re.findall(re.compile(mob_num_regex), text)
+        mob_num_regex = cs.PHONE_PATTERN
+        matches = re.findall(mob_num_regex, text)
     else:
-        matches = re.findall(re.compile(custom_regex), text)
+        matches = re.findall(custom_regex, text)
     if matches:
-        phone = [number.replace(" ", "").replace("-", "").replace(".", "").replace("(", "").replace(")", "") for number in matches if len(number) > 9]
+        phone = [number.replace(" ", "").replace("-", "").replace(".", "").replace(
+            "(", "").replace(")", "") for number in matches if len(number) > 9]
         return phone
 
 
@@ -181,14 +184,35 @@ def extract_skills(skills_section, skill_set):
     :param skills_section: string of skills section extracted from resume
     :return: list of skills extracted
     '''
-    
+
     # Object REGEX
     pattern = cs.SKILL_PATTERN
-    
+
     skills = re.findall(pattern, skills_section)
     skills = [skill.capitalize() for skill in skills if utils.preprocess_skill(skill) in skill_set]
-    
+
     return skills
+
+
+def extract_companies(text: str, companies_list: list):
+    '''
+    Helper function to extract companies from text
+    '''
+    companies = {company for company in companies_list if company in text.split()}
+    return list(companies)
+
+
+def extract_college(text: str):
+    '''
+    Helper function to extract college from text
+    '''
+    lines = text.split('\n')
+    
+    colleges = set()
+    for line in lines:
+        colleges.update(re.findall(cs.COLLEGE_PATTERN, line))
+    
+    return list(colleges)
 
 
 def extract_links_from_text(text: str):
@@ -203,44 +227,79 @@ def extract_links_from_text(text: str):
     return links
 
 
+def extract_highest_degree(text: str):
+    '''
+    Helper function to extract degree from text
+    '''
+    # Define Patterns
+    patterns = {}
+    
+    for degree_type, words in cs.DEGREE.items():
+        concat = '|'.join([degree for degree in words])
+        patterns[degree_type] = re.compile(r'\b' + concat + r'\b', re.IGNORECASE)
+    
+    
+    # Search for degree types in the resume text
+    phd_match = re.search(patterns['phd'], text)
+    masters_match = re.search(patterns['master'], text)
+    bachelors_match = re.search(patterns['bachelor'], text)
+    diploma_match = re.search(patterns['diploma'], text)
+    high_school_match = re.search(patterns['high_school'], text)
+    
+    if phd_match:
+        return 'PhD'
+    elif masters_match:
+        return 'Master'
+    elif bachelors_match:
+        return 'Bachelor'
+    elif diploma_match:
+        return 'Diploma'
+    elif high_school_match:
+        return 'High School'
+    else:
+        return 'Unknown'
+
 @handle_io_bytes
 def extract_hyperlinks_from_pdf(pdf_file):
     links = set()
-    
-    with pymupdf.open(stream= pdf_file, filetype="pdf") as pdf_document:
+
+    with pymupdf.open(stream=pdf_file, filetype="pdf") as pdf_document:
         for page_num in range(len(pdf_document)):
             page = pdf_document.load_page(page_num)
             links_in_page = page.get_links()
-            
+
             for link in links_in_page:
                 if link["kind"] == 2 and link["uri"]:
                     links.add(link["uri"])
-    
+
     return links
+
 
 @handle_io_bytes
 def extract_hyperlinks_from_docx(docx_file):
     links = set()
-    
+
     doc = Document(docx_file)
     for rel in doc.part.rels.values():
         if "hyperlink" in rel.reltype:
             links.add(rel.target_ref)
-    
+
     return links
+
 
 def extract_hyperlinks(resume_file: str, extension: str = None):
     links = set()
-    
+
     if extension == 'pdf':
         links.update(extract_hyperlinks_from_pdf(resume_file))
-    
+
     elif extension == 'docx':
         links.update(extract_hyperlinks_from_docx(resume_file))
+
     else:
         raise ValueError("Unsupported file extension")
-    
+
     # Preprocessing
     links = {link for link in list(links) if utils.validate_link(link)}
-    
+
     return links
