@@ -1,6 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile
 from fastapi.params import File
-from fastapi import UploadFile  
+from fastapi.responses import JSONResponse
 import io
 from resume_analyzer import init_parser
 
@@ -10,7 +10,7 @@ parser = init_parser()
 
 
 @app.post("/parse", description="Parse resume and return the extracted information")
-async def parse(resume: UploadFile = File(...)):
+async def parse(resume: UploadFile = File(...)) -> JSONResponse:
     
     resume_content = await resume.read()
     resume_io = io.BytesIO(resume_content)
@@ -21,7 +21,7 @@ async def parse(resume: UploadFile = File(...)):
         return {'error': 'Invalid file format. Only PDF and DOCX files are supported.'}
     
     result = parser.parse(resume_io)
-    return {'result': result}
+    return JSONResponse(result)
 
 
 if __name__ == "__main__":

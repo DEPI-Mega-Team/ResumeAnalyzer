@@ -76,16 +76,14 @@ Parses the given resume and returns the extracted information.
 - **Success**:
   ```json
   {
-      "result": {
-          "name": "John Doe",
-          "email": "john.doe@example.com",
-          "mobile_numbers": ["1234567890"],
-          "skills": ["Python", "Machine Learning"],
-          "total_experience": 5,
-          "college_name": "XYZ University",
-          "degree": "Bachelor of Science",
-          "company_names": ["ABC Corp", "DEF Inc"]
-      }
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "mobile_numbers": ["1234567890"],
+    "skills": ["Python", "Machine Learning"],
+    "total_experience": 5,
+    "college_name": "   XYZ University",
+    "degree": "Bachelor of Science",
+    "company_names": ["ABC Corp", "DEF Inc"]
   }
   ```
 - **Error**:
