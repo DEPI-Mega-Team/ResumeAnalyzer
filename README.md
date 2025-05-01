@@ -61,26 +61,39 @@ This tool is based on [PyResParser](https://github.com/OmkarPathak/pyresparser) 
        # Parse a resume
        resume = "/path/to/resume.docx"
        result = praser.parse(resume)```
+
 ## API
 
-    Parses the given resume and returns the parsed result.
-     
-    Args:
-      resume (File): The resume file to be parsed.
-     
-    Returns:
-      dict: A dictionary containing the parsed result of the resume.
-     
-    Example:
-      Request:
-      {
-          "resume": "Your resume content here"
+Parses the given resume and returns the extracted information.
+
+### Endpoint:
+`POST /parse`
+
+### Request:
+- **File**: The resume file to be parsed (PDF or DOCX).
+
+### Response:
+- **Success**:
+  ```json
+  {
+      "result": {
+          "name": "John Doe",
+          "email": "john.doe@example.com",
+          "mobile_numbers": ["1234567890"],
+          "skills": ["Python", "Machine Learning"],
+          "total_experience": 5,
+          "college_name": "XYZ University",
+          "degree": "Bachelor of Science",
+          "company_names": ["ABC Corp", "DEF Inc"]
       }
-     
-      Response:
-      {
-          "result": "Parsed result here"
-      }
+  }
+  ```
+- **Error**:
+  ```json
+  {
+      "error": "Invalid file format. Only PDF and DOCX files are supported."
+  }
+  ```
 
 # License
 
