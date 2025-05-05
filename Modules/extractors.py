@@ -198,7 +198,8 @@ def extract_companies(text: str, companies_list: list):
     '''
     Helper function to extract companies from text
     '''
-    companies = {company for company in companies_list if company in text.split()}
+    preprocessed_text = text.lower()
+    companies = {company for company in companies_list if company.lower() in preprocessed_text}
     return list(companies)
 
 

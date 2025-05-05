@@ -24,7 +24,7 @@ class ResumeParser(object):
         # Define basic attributes
         self.__custom_mobile_regex = custom_mobile_regex
         self.__skill_set = set(pd.read_csv(skills_file)['Skill'])
-        self.__companies_list = list(pd.read_csv(companies_file)['Company'])
+        self.__company_set = set(pd.read_csv(companies_file)['Company'])
         self.reset()
     
     def get_extracted_data(self):
@@ -145,9 +145,9 @@ class ResumeParser(object):
         
         # Extract Company Names
         if 'Companies worked at' in cust_ent:
-            self.__details['companies'] = cust_ent['Companies worked at']
+            self.__details['companies'] = [company for company in cust_ent['Companies worked at'] if company in self.__company_set]
         else:
-            self.__details['companies'] = extractors.extract_companies(self.__text_raw, self.__companies_list)
+            self.__details['companies'] = extractors.extract_companies(self.__text_raw, list(self.__company_set))
         
         # Extract College Name
         if 'College' in cust_ent:
