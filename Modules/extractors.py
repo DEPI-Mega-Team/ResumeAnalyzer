@@ -198,9 +198,8 @@ def extract_companies(text: str, companies_list: list):
     '''
     Helper function to extract companies from text
     '''
-    preprocessed_text = text.lower()
-    companies = {company for company in companies_list if company.lower() in preprocessed_text}
-    return list(companies)
+    companies = [company for company in companies_list if re.search(r'\b'+company+r'\b', text)]
+    return companies
 
 
 def extract_college(text: str):
