@@ -66,3 +66,5 @@ xlrd==1.2.0
 XlsxWriter==3.2.2
 torch==2.6.0
 transformers==4.51.3
+streamlit==1.44.1
+streamlit-tags==1.2.8
