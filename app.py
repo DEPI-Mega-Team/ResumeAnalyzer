@@ -1,6 +1,9 @@
 import streamlit as st
 from streamlit_tags import st_tags
+import torch
 import io
+
+torch.classes.__path__ = []
 
 if 'parser' not in st.session_state:
     from resume_analyzer import ResumeParser
