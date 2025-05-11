@@ -146,7 +146,7 @@ class ResumeParser(object):
         
         # Extract Name
         if 'PER' in cust_ent:
-            self.__details['name'] = cust_ent['PER'][0].strip()+ 'Model'
+            self.__details['name'] = cust_ent['PER'][0].strip()
         else:
             name = self.__text_raw.split('\n')[0].strip()
             self.__details['name'] = name
