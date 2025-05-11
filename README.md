@@ -79,11 +79,20 @@ Parses the given resume and returns the extracted information.
     "name": "John Doe",
     "email": "john.doe@example.com",
     "mobile_numbers": ["1234567890"],
+    "role": "Software Engineer",
+    "locations": ["New York, USA"],
     "skills": ["Python", "Machine Learning"],
-    "total_experience": 5,
-    "college_name": "   XYZ University",
+    "college": "XYZ University",
     "degree": "Bachelor of Science",
-    "company_names": ["ABC Corp", "DEF Inc"]
+    "experience": [
+      "Worked as a Developer at ABC Corp for 2 years.",
+      "Promoted to Senior Developer at DEF Inc and worked for 3 years."
+    ],
+    "companies": ["ABC Corp", "DEF Inc"],
+    "total_experience": 5,
+    "links": ["https://linkedin.com/in/johndoe"],
+    "no_of_pages": 2,
+    "format": "PDF"
   }
   ```
 - **Error**:
