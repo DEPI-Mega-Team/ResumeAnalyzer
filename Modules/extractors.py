@@ -1,6 +1,5 @@
 import io
 import re
-import os
 import pymupdf
 import docx2txt
 from docx import Document
@@ -79,7 +78,7 @@ def extract_text(resume: str, extension: str = None):
     return '\n'.join(text)
 
 
-def extract_entities_wih_custom_model(custom_nlp_text: str):
+def extract_entities_wih_custom_model(nlp_entities: list[dict]):
     '''
     Helper function to extract different entities with custom
     trained model using SpaCy's NER
@@ -88,13 +87,15 @@ def extract_entities_wih_custom_model(custom_nlp_text: str):
     :return: dictionary of entities
     '''
     entities = {}
-    for ent in custom_nlp_text.ents:
-        if ent.label_ not in entities.keys():
-            entities[ent.label_] = [ent.text]
+    for ent in nlp_entities:
+        if ent['entity'] not in entities.keys():
+            entities[ent['entity']] = [ent['text']]
         else:
-            entities[ent.label_].append(ent.text)
+            entities[ent['entity']].append(ent['text'])
+    
     for key in entities.keys():
         entities[key] = list(set(entities[key]))
+    
     return entities
 
 
@@ -172,24 +173,22 @@ def extract_mobile_numbers(text: str, custom_regex: str = None):
     else:
         matches = re.findall(custom_regex, text)
     if matches:
-        phone = [number.replace(" ", "").replace("-", "").replace(".", "").replace(
-            "(", "").replace(")", "") for number in matches if len(number) > 9]
+        phone = list({number.replace(" ", "").replace("-", "").replace(".", "").replace(
+            "(", "").replace(")", "") for number in matches if len(number) > 9})
         return phone
 
 
-def extract_skills(skills_section, skill_set):
+def extract_skills(skills_section, skill_set, pattern= cs.SKILL_PATTERN):
     '''
-    Helper function to extract skills from spacy nlp text
+    Helper function to extract skills from skills section
 
     :param skills_section: string of skills section extracted from resume
     :return: list of skills extracted
     '''
 
-    # Object REGEX
-    pattern = cs.SKILL_PATTERN
-
     skills = re.findall(pattern, skills_section)
-    skills = [skill.capitalize() for skill in skills if utils.preprocess_skill(skill) in skill_set]
+    print("skills")
+    skills = list({skill.capitalize() for skill in skills if utils.preprocess_skill(skill) in skill_set})
 
     return skills
 

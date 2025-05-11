@@ -19,11 +19,17 @@ This tool is based on [PyResParser](https://github.com/OmkarPathak/pyresparser) 
   - name
   - email
   - mobile numbers
+  - role
+  - locations
   - skills
-  - total experience in years
   - college name
   - degree
-  - company names
+  - experience
+  - companies
+  - total experience in years
+  - links
+  - number of pages
+  - resume file format
 
 - Supports resume formats PDF and DOCX.
 

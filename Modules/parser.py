@@ -1,7 +1,6 @@
 import os
 import io
 import gc
-import spacy
 import pandas as pd
 
 from . import extractors
@@ -9,7 +8,7 @@ from . import accumolators
 from . import utils
 from . import constants as cs
 
-from .custom_components import skill_ner, degree_ner
+from transformers import pipeline
 
 class ResumeParser(object):
 
@@ -19,7 +18,7 @@ class ResumeParser(object):
                  custom_mobile_regex= None):
         
         # Load NLP Models
-        self.__pretrained_nlp = spacy.load(cs.workspace_dir + '/Model/ResumeAnalyzerV3')
+        self.__pretrained_nlp = pipeline("token-classification", "reyhanemyr/bert-base-NER-finetuned-cv")
         
         # Define basic attributes
         self.__custom_mobile_regex = custom_mobile_regex
@@ -41,6 +40,8 @@ class ResumeParser(object):
             'name': None,
             'email': None,
             'mobile_numbers': None,
+            'role': None,
+            'locations': None,
             'skills': None,
             'college': None,
             'degree': None,
@@ -114,44 +115,67 @@ class ResumeParser(object):
         
         # Model Outputs
         pretrained_output = self.__pretrained_nlp(self.__text_raw)
+        print(self.__text_raw)
+        print(pretrained_output)
+        pretrained_output = utils.preprocess_bert_output(pretrained_output)
+        print(pretrained_output)
         
         # Extract entities
         cust_ent = extractors.extract_entities_wih_custom_model(pretrained_output)
         entities = extractors.extract_entity_sections(self.__text_raw)
         
         # Extract Skills
-        skills = [ent.text for ent in pretrained_output.ents if ent.label_ == 'Skill']
+        skills = [ent['text'] for ent in pretrained_output if ent['entity'] == 'SKILL']
+        print("#"*50)
+        print(cust_ent)
         valid_skills = {skill for skill in skills if utils.preprocess_skill(skill) in self.__skill_set}
         
         if valid_skills:
             self.__details['skills'] = list(valid_skills)
-            
+            print("Skills extracted from pretrained model")
         elif 'skills' in entities:
+            # First Approach: Find skills in skills section
             self.__details['skills'] = extractors.extract_skills('\n'.join(entities['skills']), self.__skill_set)
+            print("Skills extracted via Section")
         
+        if not self.__details['skills']:
+            # Second Approach: Find skills in the whole document (Brute-Force)
+            self.__details['skills'] = extractors.extract_skills('\n'.join(self.__text_raw), self.__skill_set, cs.OBJECT_PATTERN)
+            print("Skills extracted via Brute-Force")
+
         
         # Extract Name
-        if 'Name' in cust_ent:
-            self.__details['name'] = cust_ent['Name'][0].strip()
+        if 'PER' in cust_ent:
+            self.__details['name'] = cust_ent['PER'][0].strip()+ 'Model'
         else:
             name = self.__text_raw.split('\n')[0].strip()
             self.__details['name'] = name
         
         # Extract Academic Degree
-        if 'Degree' in cust_ent:
-            self.__details['degree'] = cust_ent['Degree'][0]
+        if 'DEGREE' in cust_ent:
+            self.__details['degree'] = cust_ent['DEGREE'][0]
         else:
             self.__details['degree'] = extractors.extract_highest_degree(self.__text_raw)
         
+        if 'ROLE' in cust_ent:
+            self.__details['role'] = cust_ent['ROLE']
+        
+        # Extract Locations
+        if 'LOC' in cust_ent:
+            self.__details['locations'] = list({loc for loc in cust_ent['LOC']})
+            print("Locations extracted from custom model")
+        
         # Extract Company Names
-        if 'Companies worked at' in cust_ent:
-            self.__details['companies'] = [company for company in cust_ent['Companies worked at'] if company in self.__company_set]
+        if 'COMPANY' in cust_ent:
+            self.__details['companies'] = [company for company in cust_ent['COMPANY']]
+            print("Companies extracted from custom model")
         else:
             self.__details['companies'] = extractors.extract_companies(self.__text_raw, list(self.__company_set))
         
         # Extract College Name
-        if 'College' in cust_ent:
-            self.__details['college'] = cust_ent['College']
+        if 'INSTITUTION' in cust_ent:
+            self.__details['college'] = cust_ent['INSTITUTION']
+            print("College extracted from custom model")
         else:
             self.__details['college'] = extractors.extract_college(self.__text_raw)
         
