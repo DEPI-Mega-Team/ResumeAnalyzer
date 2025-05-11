@@ -115,10 +115,7 @@ class ResumeParser(object):
         
         # Model Outputs
         pretrained_output = self.__pretrained_nlp(self.__text_raw)
-        print(self.__text_raw)
-        print(pretrained_output)
         pretrained_output = utils.preprocess_bert_output(pretrained_output)
-        print(pretrained_output)
         
         # Extract entities
         cust_ent = extractors.extract_entities_wih_custom_model(pretrained_output)
@@ -126,22 +123,18 @@ class ResumeParser(object):
         
         # Extract Skills
         skills = [ent['text'] for ent in pretrained_output if ent['entity'] == 'SKILL']
-        print("#"*50)
-        print(cust_ent)
+
         valid_skills = {skill for skill in skills if utils.preprocess_skill(skill) in self.__skill_set}
         
         if valid_skills:
             self.__details['skills'] = list(valid_skills)
-            print("Skills extracted from pretrained model")
         elif 'skills' in entities:
             # First Approach: Find skills in skills section
             self.__details['skills'] = extractors.extract_skills('\n'.join(entities['skills']), self.__skill_set)
-            print("Skills extracted via Section")
         
         if not self.__details['skills']:
             # Second Approach: Find skills in the whole document (Brute-Force)
             self.__details['skills'] = extractors.extract_skills('\n'.join(self.__text_raw), self.__skill_set, cs.OBJECT_PATTERN)
-            print("Skills extracted via Brute-Force")
 
         
         # Extract Name
@@ -163,19 +156,16 @@ class ResumeParser(object):
         # Extract Locations
         if 'LOC' in cust_ent:
             self.__details['locations'] = list({loc for loc in cust_ent['LOC']})
-            print("Locations extracted from custom model")
         
         # Extract Company Names
         if 'COMPANY' in cust_ent:
             self.__details['companies'] = [company for company in cust_ent['COMPANY']]
-            print("Companies extracted from custom model")
         else:
             self.__details['companies'] = extractors.extract_companies(self.__text_raw, list(self.__company_set))
         
         # Extract College Name
         if 'INSTITUTION' in cust_ent:
             self.__details['college'] = cust_ent['INSTITUTION']
-            print("College extracted from custom model")
         else:
             self.__details['college'] = extractors.extract_college(self.__text_raw)
         

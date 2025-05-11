@@ -187,7 +187,6 @@ def extract_skills(skills_section, skill_set, pattern= cs.SKILL_PATTERN):
     '''
 
     skills = re.findall(pattern, skills_section)
-    print("skills")
     skills = list({skill.capitalize() for skill in skills if utils.preprocess_skill(skill) in skill_set})
 
     return skills

@@ -28,7 +28,7 @@ def preprocess_bert_output(results):
     counter = 0
     for i in range(len(results)):
         if results[i]['word'].startswith('##'):
-            coutner = 1
+            counter += 1
         else:
             break
         
