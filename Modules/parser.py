@@ -45,9 +45,8 @@ class ResumeParser(object):
             'skills': None,
             'college': None,
             'degree': None,
-            'experience': None,
             'companies': None,
-            'total_experience': None,
+            'experience': None,
             'links': None,
             'no_of_pages': None,
             'format': None

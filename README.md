@@ -24,9 +24,8 @@ This tool is based on [PyResParser](https://github.com/OmkarPathak/pyresparser) 
   - skills
   - college name
   - degree
-  - experience
+  - experience (Year of Experience)
   - companies
-  - total experience in years
   - links
   - number of pages
   - resume file format
@@ -60,7 +59,7 @@ This tool is based on [PyResParser](https://github.com/OmkarPathak/pyresparser) 
        parser = init_parser()
 
        # Parse a resume
-       resume = "/path/to/resume.docx or resume_text"
+       resume = "/path/to/resume.docx"
        result = praser.parse(resume)```
 
 # License
