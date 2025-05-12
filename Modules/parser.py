@@ -56,7 +56,7 @@ class ResumeParser(object):
     def parse(self, resume):
         """
         Parses the given resume to extract various details such as name, email, mobile number, skills, academic degree,
-        companies worked at, and total experience.
+        companies worked at, and experience.
         Args:
             resume (str or io.BytesIO): The resume file path or file-like object containing the resume data.
         Returns:
@@ -68,8 +68,7 @@ class ResumeParser(object):
                 - colleges (str): The colleges the candidate mentioned in the resume.
                 - degree (str): The academic degree of the candidate.
                 - companies (list): A list of companies the candidate mentioned in the resume.
-                - experience (str): The experience details extracted from the resume.
-                - total_experience (float): The total experience in years.
+                - experience (float): Total experience in years.
         """
         self.reset()
         
@@ -174,9 +173,9 @@ class ResumeParser(object):
             total_exp = accumolators.get_total_experience(entities['experience'])
             
             # Calculate Experience in Years
-            self.__details['total_experience'] = round(total_exp / 12, 2) if total_exp else 0
+            self.__details['experience'] = round(total_exp / 12, 2) if total_exp else 0
         else:
-            self.__details['total_experience'] = 0
+            self.__details['experience'] = 0
         
         if ext:
             self.__details['format'] = ext
