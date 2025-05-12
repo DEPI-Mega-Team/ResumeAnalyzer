@@ -84,10 +84,6 @@ Parses the given resume and returns the extracted information.
     "skills": ["Python", "Machine Learning"],
     "college": "XYZ University",
     "degree": "Bachelor of Science",
-    "experience": [
-      "Worked as a Developer at ABC Corp for 2 years.",
-      "Promoted to Senior Developer at DEF Inc and worked for 3 years."
-    ],
     "companies": ["ABC Corp", "DEF Inc"],
     "total_experience": 5,
     "links": ["https://linkedin.com/in/johndoe"],
