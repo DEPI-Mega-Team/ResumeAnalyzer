@@ -17,7 +17,7 @@ resume = st.file_uploader("Upload your resume", type=["pdf", "docx"], accept_mul
 if not resume:
     st.stop()
 
-parse_button = st.button("Parse Resume")
+parse_button = st.button("Parse Resume", use_container_width= True)
 if parse_button:
     st.session_state.data = None
     resume_content = resume.read()
